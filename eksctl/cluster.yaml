@@ -1,0 +1,41 @@
+---
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: ${CLUSTER_NAME}
+  region: ap-southeast-2
+  version: "1.30"
+
+iam:
+  withOIDC: true
+  serviceAccounts:
+  - metadata:
+      name: aws-load-balancer-controller
+      namespace: kube-system
+    wellKnownPolicies:
+      awsLoadBalancerController: true
+
+nodeGroups:
+  - name: app-v3
+    instanceType: m5.large
+    desiredCapacity: 3
+    privateNetworking: true
+    preBootstrapCommands:
+      - "yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm"
+      - "systemctl enable amazon-ssm-agent"
+      - "systemctl start amazon-ssm-agent"
+    iam:
+      attachPolicyARNs:
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
+        - arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess
+        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+      withAddonPolicies:
+        ImageBuilder: true
+        ExternalDNS: true
+        CertManager: true
+        ALBIngress: true
+        CloudWatch: true
+        EBS: true

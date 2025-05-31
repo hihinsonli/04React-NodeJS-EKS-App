@@ -6,10 +6,45 @@ function App() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_URL}/api/mycats`)
-      .then(response => response.json())
-      .then(data => setItems(data))
-      .catch(err => setError('Failed to fetch items: ' + err.message));
+    const fetchData = async () => {
+      try {
+        console.log('Making API request to /api/mycats');
+        const response = await fetch('/api/mycats', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+        if (!response.ok) {
+          const text = await response.text();
+          console.error('Error response:', text);
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const contentType = response.headers.get('content-type');
+        console.log('Content-Type:', contentType);
+
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await response.text();
+          console.error('Non-JSON response:', text);
+          throw new TypeError("Oops, we haven't got JSON!");
+        }
+
+        const data = await response.json();
+        console.log('Received data:', data);
+        setItems(data);
+      } catch (err) {
+        console.error('Error:', err);
+        setError('Failed to fetch items: ' + err.message);
+      }
+    };
+
+    fetchData();
   }, []);
 
   return (
