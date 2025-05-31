@@ -1,0 +1,78 @@
+{
+    "PolicyName": "GitHubActionsPolicy",
+    "Path": "/",
+    "Description": "Policy for GitHub Actions to deploy infrastructure and manage Terraform state",
+    "Document": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Action": "s3:*",
+            "Effect": "Allow",
+            "Resource": "*",
+            "Sid": "S3FullAccess"
+          },
+          {
+            "Action": "cloudfront:*",
+            "Effect": "Allow",
+            "Resource": "*",
+            "Sid": "CloudFrontFullAccess"
+          },
+          {
+            "Action": "lambda:*",
+            "Effect": "Allow",
+            "Resource": "*",
+            "Sid": "LambdaFullAccess"
+          },
+          {
+            "Action": "iam:*",
+            "Effect": "Allow",
+            "Resource": "*",
+            "Sid": "IAMFullAccess"
+          },
+          {
+            "Action": "sns:*",
+            "Effect": "Allow",
+            "Resource": "*",
+            "Sid": "SNSFullAccess"
+          },
+          {
+            "Action": "cloudwatch:*",
+            "Effect": "Allow",
+            "Resource": "*",
+            "Sid": "CloudWatchFullAccess"
+          },
+          {
+            "Action": "dynamodb:*",
+            "Effect": "Allow",
+            "Resource": "*",
+            "Sid": "DynamoDBFullAccess"
+          },
+          {
+            "Action": [
+              "logs:*",
+              "cloudwatch:*"
+            ],
+            "Effect": "Allow",
+            "Resource": "*",
+            "Sid": "CloudWatchLogsFullAccess"
+          },
+          {
+            "Action": [
+              "ecr:GetAuthorizationToken",
+              "ecr:BatchCheckLayerAvailability",
+              "ecr:CompleteLayerUpload",
+              "ecr:GetDownloadUrlForLayer",
+              "ecr:InitiateLayerUpload",
+              "ecr:PutImage",
+              "ecr:UploadLayerPart",
+              "ecr:CreateRepository",
+              "ecr:DescribeRepositories"
+            ],
+            "Effect": "Allow",
+            "Resource": "*",
+            "Sid": "ECRFullAccess"
+          }
+        ]
+      },
+    "Tags": []
+}

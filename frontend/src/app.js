@@ -6,7 +6,7 @@ function App() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch('http://localhost:5001/api/mycats')
+    fetch(`${process.env.REACT_APP_API_URL}/api/mycats`)
       .then(response => response.json())
       .then(data => setItems(data))
       .catch(err => setError('Failed to fetch items: ' + err.message));
