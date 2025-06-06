@@ -77,7 +77,6 @@ jobs:
         env:
           CLUSTER_NAME: ${{ github.event.inputs.cluster_name }}
         run: |
-          # Update cluster name in eksctl/cluster.yaml
           envsubst < eksctl/cluster.yaml > eksctl/cluster_updated.yaml
           mv eksctl/cluster_updated.yaml eksctl/cluster.yaml
 
@@ -87,6 +86,20 @@ jobs:
           else
             echo "Cluster ${CLUSTER_NAME} already exists in region ${CLUSTER_REGION} and is ACTIVE."
           fi
+
+      - name: Get VPC and Subnet IDs
+        run: |
+          # Get VPC ID
+          VPC_ID=$(aws eks describe-cluster --name ${{ github.event.inputs.cluster_name }} --query 'cluster.resourcesVpcConfig.vpcId' --output text)
+          echo "VPC_ID=$VPC_ID" >> $GITHUB_ENV
+          
+          # Get Subnet IDs
+          SUBNET_IDS=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$VPC_ID" --query 'Subnets[*].SubnetId' --output text | tr '\t' ',')
+          echo "SUBNET_IDS=$SUBNET_IDS" >> $GITHUB_ENV
+          
+          # Get Security Group ID
+          SG_ID=$(aws ec2 describe-security-groups --filters "Name=vpc-id,Values=$VPC_ID" --query 'SecurityGroups[0].GroupId' --output text)
+          echo "SG_ID=$SG_ID" >> $GITHUB_ENV
 
       - name: Update kubeconfig
         run: |
@@ -100,11 +113,8 @@ jobs:
 
       - name: Install AWS Load Balancer Controller
         run: |
-          # Add the EKS Helm repository
           helm repo add eks https://aws.github.io/eks-charts
           helm repo update
-          
-          # Install or upgrade the AWS Load Balancer Controller using existing ServiceAccount
           helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller \
             -n kube-system \
             --set clusterName=${{ github.event.inputs.cluster_name }} \
@@ -114,11 +124,7 @@ jobs:
       - name: Wait for AWS Load Balancer Controller to be ready
         run: |
           echo "Waiting for AWS Load Balancer Controller to be ready..."
-          
-          # Wait for controller pods to be ready
           kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=aws-load-balancer-controller -n kube-system --timeout=300s
-          
-          # Wait for webhook service to have endpoints
           echo "Waiting for webhook service endpoints..."
           for i in {1..30}; do
             ENDPOINTS=$(kubectl get endpoints aws-load-balancer-webhook-service -n kube-system -o jsonpath='{.subsets[*].addresses[*].ip}' 2>/dev/null || echo "")
@@ -129,8 +135,6 @@ jobs:
             echo "Waiting for webhook endpoints... ($i/30)"
             sleep 10
           done
-          
-          # Verify webhook service is responding
           echo "Verifying webhook service readiness..."
           kubectl get svc aws-load-balancer-webhook-service -n kube-system
           kubectl get endpoints aws-load-balancer-webhook-service -n kube-system
@@ -159,7 +163,6 @@ jobs:
             --from-file=nginx.conf=frontend/nginx.conf \
             --dry-run=client -o yaml | kubectl apply -f -
           
-          # Deploy frontend application
           envsubst < k8s/frontend.yaml | kubectl apply -f -
 
       - name: Wait for deployments to be ready

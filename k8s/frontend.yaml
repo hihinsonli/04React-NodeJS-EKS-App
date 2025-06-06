@@ -102,14 +102,14 @@ metadata:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
     alb.ingress.kubernetes.io/load-balancer-attributes: routing.http.drop_invalid_header_fields.enabled=true
     alb.ingress.kubernetes.io/group.name: app
-    alb.ingress.kubernetes.io/vpc-id: vpc-01f4c3bdb4697bc98
-    alb.ingress.kubernetes.io/security-groups: sg-05bb92e3e1803c2fa
-    alb.ingress.kubernetes.io/subnets: subnet-05ae0d587eb73f8b1,subnet-002d46c247eb1cc2a,subnet-03ceb3072848548ce
+    alb.ingress.kubernetes.io/subnets: ${SUBNET_IDS}
+    alb.ingress.kubernetes.io/security-groups: ${SG_ID}
+    alb.ingress.kubernetes.io/vpc-id: ${VPC_ID}
     alb.ingress.kubernetes.io/target-group-attributes: deregistration_delay.timeout_seconds=30
-    alb.ingress.kubernetes.io/healthcheck-path: /health
     alb.ingress.kubernetes.io/healthcheck-port: '80'
     alb.ingress.kubernetes.io/success-codes: '200'
     alb.ingress.kubernetes.io/healthy-threshold-count: '2'
